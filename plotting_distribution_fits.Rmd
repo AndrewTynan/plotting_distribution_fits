@@ -1,8 +1,10 @@
 ---
 title: "Plotting Distribution Fits"
 author: "Tynan"
-date: "2023-05-02"
-output: html_document
+date: "2023-10-21"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -11,6 +13,27 @@ library(tidyverse)
 ```
 
 ## Plots
+
+Made this on 2023-05-02, but it needs more work.
+
+Made several different iterations of the distribution plots. This is still a WIP. Need to add normal distribution, was less interested in that at first.
+
+Each iteration added either a new distribution or refined the code a bit to make it more compact. 
+
+Currently, the functions both generate a data set based on a common distribution, plot it, and then assess the fit of the data to the distribution. 
+
+Need to pull in some real-world data to demonstrate the use case of comparing the fit to different distributions. 
+
+Also, should add some stat fit tests to complement the plot fit test. 
+
+
+## Versions of Distribution Plots
+
+* This version can fit log-normal, Weibull, and Beta distributions. 
+
+* The control flow determines plot settings. But it's a bit repetitive, could be more compact. 
+
+* NOTE: different params are needed for each distribution. 
 
 ```{r qqplot_and_histogram_v1, fig.width=15, fig.height=6}
 qqplot_and_histogram_v1 <- function(distribution_type, sample_size, params) {
@@ -91,6 +114,8 @@ qqplot_and_histogram_v1 <- function(distribution_type, sample_size, params) {
 qqplot_and_histogram_v1('rlnorm', 1000, c(5, 5))
 ```
 
+* Does not fit Poisson distribution, but combines the Weibull and Beta conditions into the same section. 
+
 ```{r qqplot_and_histogram_v2, fig.width=15, fig.height=6}
 qqplot_and_histogram_v2 <- function(distribution_type, sample_size, params) {
   
@@ -153,6 +178,8 @@ qqplot_and_histogram_v2 <- function(distribution_type, sample_size, params) {
 
 qqplot_and_histogram_v2('rbeta', 1000, c(1, 5))
 ```
+
+* This version is similar to qqplot_and_histogram_v1 above, need to come back and see what changed.
 
 ```{r qqplot_and_histogram_v3, fig.width=15, fig.height=6}
 qqplot_and_histogram_v3 <- function(distribution_type, sample_size, params) {
@@ -225,7 +252,13 @@ qqplot_and_histogram_v3 <- function(distribution_type, sample_size, params) {
 qqplot_and_histogram_v3('rbeta', 1000, c(1, 5))
 ```
 
-```{r qqplot_and_histogram_v4, fig.width=15, fig.height=6}
+* Final version
+
+* The control flow for how the example data.frame is made has been updated. 
+
+* A list called 'dist_args' is created to pass the params to a much more compact plotting section.
+
+```{r qqplot_and_histogram_FINAL, fig.width=15, fig.height=6}
 
 # final version 
 qqplot_and_histogram <- function(distribution_type, sample_size, params) {
@@ -284,8 +317,12 @@ qqplot_and_histogram <- function(distribution_type, sample_size, params) {
 
 }
 
-qqplot_and_histogram('rlnorm', 1000)s
+qqplot_and_histogram('rlnorm', 1000)
 ```
+
+## Final Version
+
+* The final version of qqplot_and_histogram() is used when looping over different distributions.
 
 ```{r misc, fig.width=15, fig.height=6}
 params_list <- list(c('rlnorm'),
@@ -401,6 +438,10 @@ poisson %>%
 
 ## Misc Plots 
 
+* These are other distributions plots, could incorporate them into the main function, but need to get the qq line plot set-up. 
+
+* This is for Student t Distribution. 
+
 ```{r t_dist}
 data <- data.frame(x=rt(10000, df=7))
 
@@ -416,6 +457,8 @@ ggplot(aes(x=x)) +
   theme_bw()
 ```
 
+* For The F Distribution
+
 ```{r t_dist_2}
 data <- data.frame(x=rf(10000, df1=7, df2=120))
 
@@ -426,7 +469,8 @@ ggplot(aes(x=x)) +
                 linewidth = 1, 
                 color     = 'gray', 
                 args      = list()) +
-  labs(title="Histogram of interest rate changes") + 
+  labs(title="Histogram of interest rate changes",
+       subtitle = "An example of the F Distribution") + 
   theme_bw()
 ```
 
@@ -456,79 +500,3 @@ ggplot(data.frame(null_stats = oenull)) +
    stat_qq(distribution = stats::qchisq, dparams = list(df = 3)) +
    stat_qq_line(distribution = stats::qchisq, dparams = list(df = 3)) 
 ```
-
-```{r}
-huh <- function() {
-  
-  print('asdasdsad')
-  df2 <<- data.frame(Doubles=double(),
-                 Integers=integer(),
-                 Factors=factor(),
-                 Logicals=logical(),
-                 Characters=character(),
-                 stringsAsFactors=FALSE) 
-  
-}
-
-huh()
-# df2 %>% names
-```
-
-```{r}
-mtcars %>% substitute(.)
-```
-
-```{r}
-variable_name <- function(object_name, folder = "temp") {
-  # return object_name
-  object_name
-  }
-
-# mtcars %>% substitute(.)
-mtcars %>% variable_name(object_name = deparse(substitute(.)))
-```
-
-```{r}
-
-```
-
-```{r}
-x_expression <- function(x) {
-  getAST <- function(ee) purrr::map_if(as.list(ee), is.call, getAST)
-
-  sc <- sys.calls()
-  ASTs <- purrr::map( as.list(sc), getAST ) %>%
-    purrr::keep( ~identical(.[[1]], quote(`%>%`)) )  # Match first element to %>%
-
-  if( length(ASTs) == 0 ) return( enexpr(x) )        # Not in a pipe
-  lhs_name <- dplyr::last( ASTs )[[2]]    # Second element is the left-hand sides
-  return(lhs_name)
-
-}
-
-# mtcars %>% x_expression()
-
-huh <- function(data) {
-
-  # data %>% variable_name(object_name = deparse(substitute(.)))
-
-  # data %>% x_expression()
-  x_expression(data)
-  wow <- glue('{lhs_name}_in_a_string')
-  print(wow)
-  # data
-  
-}
-
-mtcars %>% huh()
-
-
-```
-
-
-
-
-
-
-
-
